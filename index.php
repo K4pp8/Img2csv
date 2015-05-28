@@ -37,7 +37,7 @@ function adFile2Db($filePath) {
 		
 		//echo "Inserisco:[". $contatore . "] ". $pathDefinitivo . '<br />';
 	} else{
-		echo "<br />Errore insterimento:" . $pathDefinitivo . "<br /> Errore:" . $connection->error . "<br />";
+		echo "<br />Errore insert db:" . $pathDefinitivo . "<br /> Errore:" . $connection->error . "<br />";
 	}
 }
 
