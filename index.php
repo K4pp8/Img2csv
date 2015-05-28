@@ -5,10 +5,8 @@ header('Content-Disposition: attachement; filename=file-img.csv');
 error_reporting(E_ALL);
 ini_set('display_errors', 'On');
 
-
 //Uso di costanti
 define('PATHASSOLUTO', "/Volumes/Smart Hd/ARCHIVIO_FOTO_generale/");
-//$pathAssoluto = "/Volumes/Smart Hd/ARCHIVIO_FOTO_generale/ARCHIVIO_IPASUD/FOOD/";
 $directory = "../../../../../../../../.." . PATHASSOLUTO;
 
 $contatore = 0;
@@ -27,15 +25,13 @@ $array_to_csv = Array( Array("sap","@path","@path2") );
 
 
 function adFile2Db($filePath) {
-	global $contatore;
-
-	global $connection; 
+  	global $contatore;
+  	global $connection; 
 
   	$contatore++;
-
   	$pathDefinitivo = str_replace('../../../../../../../../..', '', $filePath);
 
-	$sqlPathImg = "INSERT INTO ImgDbHD ( pathimg) VALUES (\"". $pathDefinitivo ."\");";
+	  $sqlPathImg = "INSERT INTO ImgDbHD ( pathimg) VALUES (\"". $pathDefinitivo ."\");";
 
 	if ($result = $connection->query( $sqlPathImg )) { 
 		
@@ -43,9 +39,8 @@ function adFile2Db($filePath) {
 	} else{
 		echo "<br />Errore insterimento:" . $pathDefinitivo . "<br /> Errore:" . $connection->error . "<br />";
 	}
-
-  	
 }
+
 
 function searchFile($folder) {
   
@@ -172,12 +167,9 @@ for($i=1; $i<$numerorighe; $i++) { // CICLO FOR CHE ESAMI RIGA PER RIGA IL FILE
 //error_log("*** Output in file elaborato  ***", 0);
 
 convert_to_csv($array_to_csv, 'report.csv', ',');
-
 $connection->close();
-
 
 closelog();
 error_log("*** Sconnesso da db ***", 0);
-//echo "<br /><p>*** Sconnesso da db ***</p>";
 
 ?>
