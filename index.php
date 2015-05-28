@@ -6,8 +6,6 @@ error_reporting(E_ALL);
 ini_set('display_errors', 'On');
 
 
-openlog("myScriptLog", LOG_PID | LOG_PERROR, LOG_LOCAL0);
-
 //Uso di costanti
 define('PATHASSOLUTO', "/Volumes/Smart Hd/ARCHIVIO_FOTO_generale/");
 //$pathAssoluto = "/Volumes/Smart Hd/ARCHIVIO_FOTO_generale/ARCHIVIO_IPASUD/FOOD/";
@@ -20,7 +18,6 @@ include("db.php");
 $connection = Database::getConnection(); 
 $machato = FALSE;
 $sapNonTrovato = "123";
-
 
 $aprifile = file("csv/rivendita2img.csv"); // APRO IL FILE
 $numerorighe = count($aprifile); // CONTO QUANTE RIGHE CI SONO
