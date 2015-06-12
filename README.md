@@ -12,4 +12,3 @@ Todo
 - gui
 - inserimento file da interfaccia
 - tasto per generazione dei dati e della tabella delle immagini
-

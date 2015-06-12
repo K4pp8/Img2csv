@@ -2,27 +2,25 @@
 header('Content-Type: application/csv');
 header('Content-Disposition: attachement; filename=file-img.csv');
 
-error_reporting(E_ALL);
-ini_set('display_errors', 'On');
-
-
-openlog("myScriptLog", LOG_PID | LOG_PERROR, LOG_LOCAL0);
-
-//Uso di costanti
-define('PATHASSOLUTO', "/Volumes/Smart Hd/ARCHIVIO_FOTO_generale/");
-//$pathAssoluto = "/Volumes/Smart Hd/ARCHIVIO_FOTO_generale/ARCHIVIO_IPASUD/FOOD/";
-$directory = "../../../../../../../../.." . PATHASSOLUTO;
-
-$contatore = 0;
-
+include("config.php");
 include("db.php");
+include("util.php");
+
+
+if( DEBUGMODE ){
+  error_reporting(E_ALL);
+  ini_set('display_errors', 'On');
+}
+
+$directory = "../../../../../../../../.." . PATHASSOLUTO;
+$contatore = 0;
 
 $connection = Database::getConnection(); 
 $machato = FALSE;
 $sapNonTrovato = "123";
 
 
-$aprifile = file("csv/rivendita2img.csv"); // APRO IL FILE
+$aprifile = file( FILEDAELABORARE ); // APRO IL FILE
 $numerorighe = count($aprifile); // CONTO QUANTE RIGHE CI SONO
 //$fp = fopen('csv/file_img.csv', 'w+');
 
@@ -30,25 +28,21 @@ $array_to_csv = Array( Array("sap","@path","@path2") );
 
 
 function adFile2Db($filePath) {
-	global $contatore;
+  global $contatore;
+  global $connection; 
 
-	global $connection; 
+  $contatore++;
+  $pathDefinitivo = str_replace('../../../../../../../../..', '', $filePath);
 
-  	$contatore++;
+  $sqlPathImg = "INSERT INTO ImgDbHD ( pathimg) VALUES (\"". $pathDefinitivo ."\");";
 
-  	$pathDefinitivo = str_replace('../../../../../../../../..', '', $filePath);
-
-	$sqlPathImg = "INSERT INTO ImgDbHD ( pathimg) VALUES (\"". $pathDefinitivo ."\");";
-
-	if ($result = $connection->query( $sqlPathImg )) { 
-		
-		//echo "Inserisco:[". $contatore . "] ". $pathDefinitivo . '<br />';
-	} else{
-		echo "<br />Errore insterimento:" . $pathDefinitivo . "<br /> Errore:" . $connection->error . "<br />";
-	}
-
-  	
+  if ($result = $connection->query( $sqlPathImg )) { 
+    //echo "Inserisco:[". $contatore . "] ". $pathDefinitivo . '<br />';
+  } else{
+    echo "<br />Errore insterimento:" . $pathDefinitivo . "<br /> Errore:" . $connection->error . "<br />";
+  } 
 }
+
 
 function searchFile($folder) {
   
@@ -74,6 +68,7 @@ function searchFile($folder) {
 
 }
 
+
 function convert_to_csv($input_array, $output_file_name, $delimiter){
     /** open raw memory as file, no need for temp files */
     $temp_memory = fopen('csv/report.csv', 'w+');
@@ -82,105 +77,89 @@ function convert_to_csv($input_array, $output_file_name, $delimiter){
         /** default php csv handler **/
         fputcsv($temp_memory, $line, $delimiter);
     }
-        /** rewrind the "file" with the csv lines **/
-    fseek($temp_memory, 0);
+    /** rewrind the "file" with the csv lines **/
+    fseek($temp_memory,0);
     
     /** Send file to browser for download */
     fpassthru($temp_memory);
     
 }
 
- function puliscistringa($stringa){
-    $stringa = str_replace("à", "a", $stringa);
-    $stringa = str_replace("è", "è", $stringa);
-    $stringa = str_replace("ì", "i", $stringa);
-    $stringa = str_replace("ò", "o", $stringa);                        
-    $stringa = str_replace("ù", "u", $stringa);
-    $stringa = str_replace("\n", " ", $stringa);
-    $stringa = str_replace(" ", "", $stringa);
-    //@$stringa = ereg_replace("[^A-Za-z0-9' ]", "", $stringa );
-    return $stringa;
-}
 
- function mageggia($stringa){
-    $stringa = str_replace("/Volumes/", "", $stringa);
-    $stringa = str_replace("/", ":", $stringa);
-    return $stringa;
-}
+function ritornaPath($stringa){
+  $pathImg = "";
+  $result;
 
- function ritornaPath($stringa){
- 	$pathImg = "";
- 	$result;
+  global $connection; 
 
- 	global $connection; 
+  $querySql = "SELECT pathimg FROM ImgDbHD WHERE pathimg LIKE \"%". puliscistringa($stringa) ."%\" LIMIT 0,5";
 
-	$querySql = "SELECT pathimg FROM ImgDbHD WHERE pathimg LIKE \"%". puliscistringa($stringa) ."%\" LIMIT 0,5";
+  if ($result_obj = $connection->query( $querySql )) { 
+    //error_log("Cerco valori:". $stringa );
 
-	if ($result_obj = $connection->query( $querySql )) { 
-		//error_log("Cerco valori:". $stringa , 0);
+    //echo "<p>*** Cerco valori:". $stringa ." ***</p>";
 
-		//echo "<p>*** Cerco valori:". $stringa ." ***</p>";
+    while($result = $result_obj->fetch_array(MYSQLI_ASSOC)) {
+      // collect the array
+      //echo $result;
+      //echo $result[pathimg];
+      return mageggia($result["pathimg"]);
+      //print_r( $result[0] );
+      //echo "</pre>";
 
-		while($result = $result_obj->fetch_array(MYSQLI_ASSOC)) {
-			// collect the array
-			//echo $result;
-			//echo $result[pathimg];
-			return mageggia($result["pathimg"]);
-			//print_r( $result[0] );
-			//echo "</pre>";
+    }
 
-		}
+  }else{
+    echo "<br /> Errore:" . $connection->error . "<br />";
+  }
 
-	}else{
-		echo "<br /> Errore:" . $connection->error . "<br />";
-	}
-
-	//TODO devo capire come funzione il return
+  //TODO devo capire come funzione il return
     return "";
 }
 
 
- if ($result = $connection->query("SELECT DATABASE();")) { 
- 	error_log("*** Eccedo al DB ***", 0);
- 	//echo '<p>*** Eccedo al DB ***</p>';
- } 
+if ($result = $connection->query("SELECT DATABASE();")) { 
+  error_log("*** Eccedo al DB ***");
+} 
 
 
-//------> ricreazione db <---------------
-// if ($result = $connection->query("ALTER TABLE ImgDbHD AUTO_INCREMENT = 1;")) { 
-// 	echo "<p>*** Azzero INDICI ***</p>";
-// } 
+if( AGGIORNADB ){
 
-// if ($result = $connection->query("TRUNCATE ImgDbHD;")) { 
-// 	echo "<p>*** Cancello vecchi valori ***</p>";
-// } 
+  //Azzero gl'indici della tabella
+  if ($result = $connection->query("ALTER TABLE ImgDbHD AUTO_INCREMENT = 1;")) { 
+    error_log("*** Azzero INDICI ***");
+  } 
 
-// searchFile($directory);
-// echo "<br /><p>*** Aggiorno Valori ***</p>";
+  //Cancello tutto il contenuto
+  if ($result = $connection->query("TRUNCATE ImgDbHD;")) { 
+    error_log("*** Cancello vecchi valori ***");
+  } 
 
+  //Faccio la ricerca e l'inserimento dei valori nel db
+  searchFile($directory);
+  error_log("*** Cancello vecchi valori ***");
 
-error_log("*** Cerco i valori ***", 0);
+}else{
 
-for($i=1; $i<$numerorighe; $i++) { // CICLO FOR CHE ESAMI RIGA PER RIGA IL FILE
-	// inizia da uno perche deve saltare l'intestazione del csv
+    error_log("*** Cerco i valori ***");
 
-	$dati = explode(";",$aprifile[$i]); // SUDDIVIDO I VARI CAMPI
+    for($i=1; $i<$numerorighe; $i++) { // CICLO FOR CHE ESAMI RIGA PER RIGA IL FILE
+      // inizia da uno perche deve saltare l'intestazione del csv
 
-	$pathRitornato = ritornaPath( $dati[0] );
+      $dati = explode(";",$aprifile[$i]); // SUDDIVIDO I VARI CAMPI
 
-	array_push($array_to_csv, Array( puliscistringa($dati[0]) , $pathRitornato) );
+      $pathRitornato = ritornaPath( $dati[0] );
 
+      array_push($array_to_csv, Array( puliscistringa($dati[0]) , $pathRitornato) );
+
+    }
 }
 
-//error_log("*** Output in file elaborato  ***", 0);
 
 convert_to_csv($array_to_csv, 'report.csv', ',');
 
 $connection->close();
 
-
-closelog();
-error_log("*** Sconnesso da db ***", 0);
-//echo "<br /><p>*** Sconnesso da db ***</p>";
+error_log("*** Sconnesso da db ***");
 
 ?>
