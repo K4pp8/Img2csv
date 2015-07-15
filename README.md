@@ -12,4 +12,6 @@ Todo
 - gui
 - inserimento file da interfaccia
 - tasto per generazione dei dati e della tabella delle immagini
+- censire le modifiche
 - ordinare il codice
+- salvare tutto disco ed eventualmente farlo scaricare
